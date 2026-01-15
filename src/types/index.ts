@@ -19,6 +19,9 @@ export interface VisualAssets {
   businessCard: string;
   socialTemplate: string;
   brandPattern: string;
+  packaging: string;
+  apparel: string;
+  stationery: string;
 }
 
 export interface GeneratedImages {
@@ -28,6 +31,9 @@ export interface GeneratedImages {
   businessCard?: string;
   socialTemplate?: string;
   brandPattern?: string;
+  packaging?: string;
+  apparel?: string;
+  stationery?: string;
 }
 
 export interface BrandIdentity {
@@ -36,6 +42,10 @@ export interface BrandIdentity {
   brandVoice: string[];
   visualStyle: string;
   visualAssets: VisualAssets;
+  validation?: {
+    isValidLogo: boolean;
+    refusalReason?: string;
+  };
 }
 
 export type AppStatus = 'idle' | 'analyzing' | 'generating' | 'completed' | 'error';

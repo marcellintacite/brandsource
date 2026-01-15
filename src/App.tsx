@@ -25,10 +25,10 @@ function App() {
       <Navbar status={status} reset={reset} />
 
       <Routes>
-        {/* Redirect logic: Only auto-redirect to projects from root if already logged in */}
+        {/* Redirect logic: Prevent auto-redirect to allow StudioPage to handle deferred auth flow */}
         <Route 
           path="/" 
-          element={user ? <Navigate to="/projets" replace /> : <StudioPage />} 
+          element={<StudioPage />} 
         />
         
         {/* Studio path: Never redirect away automatically, allowing user to stay after login if they were here */}
@@ -40,12 +40,16 @@ function App() {
         <Route 
           path="/projets" 
           element={
-            <ProjectsPage 
-              analyses={userAnalyses} 
-              onSelectProject={selectProject} 
-              onReset={reset}
-              loading={loadingAnalyses}
-            />
+            user ? (
+              <ProjectsPage 
+                analyses={userAnalyses} 
+                onSelectProject={selectProject} 
+                onReset={reset}
+                loading={loadingAnalyses}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           } 
         />
       </Routes>

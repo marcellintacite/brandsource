@@ -10,6 +10,9 @@ const StudioPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState<number | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState<{ base64: string; category: string } | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   
   const {
     status,
@@ -51,20 +54,11 @@ const StudioPage: React.FC = () => {
   }, [id, userAnalyses, loadingAnalyses, selectProject, navigate]);
 
   const onImageSelected = async (base64: string, category: string) => {
-    let currentUser = user;
-    if (!currentUser) {
-      try {
-        currentUser = await loginWithGoogle();
-      } catch (err) {
-        console.error("Login failed", err);
-        return;
-      }
-    }
-
-    if (currentUser) {
-      if (userAnalyses.length < 15) { 
+    // If user is already logged in, proceed directly
+    if (user) {
+      if (userAnalyses.length < 2) { 
         try {
-          const newProjectId = await handleImageSelected(base64, category, currentUser.uid, currentUser.displayName || undefined);
+          const newProjectId = await handleImageSelected(base64, category, user.uid, user.displayName || undefined);
           if (newProjectId) {
             navigate(`/studio/${newProjectId}`, { replace: true });
           }
@@ -73,9 +67,63 @@ const StudioPage: React.FC = () => {
         }
       } else {
         setStatus('error');
-        setError("Limite atteinte : Vous avez déjà généré le maximum de studios autorisés.");
+        setError("Limite atteinte (2/2). Veuillez contacter le propriétaire pour débloquer plus de créations.");
       }
+    } else {
+      // Store upload data and show auth modal
+      setPendingUpload({ base64, category });
+      setShowAuthModal(true);
     }
+  };
+
+  const handleGenerate = async () => {
+    if (!pendingUpload) return;
+    
+    setIsAuthenticating(true);
+    try {
+      const currentUser = await loginWithGoogle();
+      
+      if (currentUser) {
+        // Close modal and show loading immediately
+        setShowAuthModal(false);
+        setIsAuthenticating(false);
+        
+        // Set status to analyzing to show loading screen
+        setStatus('analyzing');
+        
+        if (userAnalyses.length < 2) {
+          const newProjectId = await handleImageSelected(
+            pendingUpload.base64,
+            pendingUpload.category,
+            currentUser.uid,
+            currentUser.displayName || undefined
+          );
+          
+          if (newProjectId) {
+            navigate(`/studio/${newProjectId}`, { replace: true });
+          } else {
+          setStatus('error');
+          setError("Limite atteinte (2/2). Veuillez contacter le propriétaire pour débloquer plus de créations.");
+          // Only redirect if we can't show the error here, but we set status error so it renders the error view
+        }
+        } else {
+          setStatus('error');
+          setError("Limite atteinte (2/2). Veuillez contacter le propriétaire pour débloquer plus de créations.");
+        }
+        
+        setPendingUpload(null);
+      }
+    } catch (err) {
+      console.error("Login failed", err);
+      setError("La connexion a échoué. Veuillez réessayer.");
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleCancelAuth = () => {
+    setShowAuthModal(false);
+    setPendingUpload(null);
+    setIsAuthenticating(false);
   };
 
   return (
@@ -86,6 +134,68 @@ const StudioPage: React.FC = () => {
           <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-orange-100/40 rounded-full blur-[120px] -z-10 animate-pulse transition-all duration-[4000ms]"></div>
           <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-amber-50/50 rounded-full blur-[100px] -z-10 animate-pulse transition-all duration-[6000ms] delay-700"></div>
         </>
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center animate-in fade-in duration-300">
+          <div 
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-md" 
+            onClick={!isAuthenticating ? handleCancelAuth : undefined}
+          ></div>
+          
+          <div className="relative bg-white rounded-[2.5rem] p-8 md:p-12 max-w-md w-full mx-4 shadow-2xl animate-in zoom-in-95 duration-500">
+            <div className="text-center space-y-6">
+              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl md:text-3xl font-brand font-bold text-slate-900 tracking-tight">
+                  Prêt à Générer !
+                </h3>
+                <p className="text-slate-500 text-sm md:text-base leading-relaxed">
+                  Connectez-vous avec Google pour sauvegarder votre studio de marque et accéder à tous vos projets.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isAuthenticating}
+                  className="w-full px-6 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                >
+                  {isAuthenticating ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Connexion...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                      Générer avec Google
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleCancelAuth}
+                  disabled={isAuthenticating}
+                  className="w-full px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Quick Switcher */}
@@ -207,7 +317,9 @@ const StudioPage: React.FC = () => {
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div className="space-y-3">
-            <p className="text-slate-900 font-bold text-2xl md:text-3xl tracking-tight leading-none">Limite Atteinte</p>
+            <p className="text-slate-900 font-bold text-2xl md:text-3xl tracking-tight leading-none">
+              {error?.toLowerCase().includes('limite') ? 'Limite Atteinte' : 'Analyse Impossible'}
+            </p>
             <p className="text-slate-500 font-medium px-4">{error}</p>
             <button onClick={() => { reset(); navigate('/studio'); }} className="mt-4 px-6 py-2 bg-slate-100 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all">Démarrer une nouvelle analyse</button>
           </div>

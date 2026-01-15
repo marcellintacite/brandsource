@@ -10,6 +10,9 @@ import MerchHoodie from './mockups/MerchHoodie';
 import SpeakerTemplate from './mockups/SpeakerTemplate';
 import EventFlyer from './mockups/EventFlyer';
 import YoutubeThumb from './mockups/YoutubeThumb';
+import Packaging from './mockups/Packaging';
+import Apparel from './mockups/Apparel';
+import Stationery from './mockups/Stationery';
 
 interface BrandDashboardProps {
   identity: BrandIdentity;
@@ -17,7 +20,7 @@ interface BrandDashboardProps {
   logoUrl: string | null;
 }
 
-type MockupType = 'card' | 'social' | 'poster' | 'sign' | 'web' | 'merch' | 'speaker' | 'flyer' | 'youtube';
+type MockupType = 'card' | 'social' | 'poster' | 'sign' | 'web' | 'merch' | 'speaker' | 'flyer' | 'youtube' | 'packaging' | 'apparel' | 'stationery';
 
 const BrandDashboard: React.FC<BrandDashboardProps> = ({ identity, images, logoUrl }) => {
   const { brandColors, brandVoice, typography } = identity;
@@ -94,6 +97,12 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({ identity, images, logoU
         return <EventFlyer colors={brandColors} typography={typography} logoUrl={logoUrl} tagline={brandVoice[1] || brandVoice[0]} />;
       case 'youtube':
         return <YoutubeThumb colors={brandColors} logoUrl={logoUrl} tagline={brandVoice[1] || brandVoice[0]} />;
+      case 'packaging':
+        return <Packaging colors={brandColors} logoUrl={logoUrl} brandName={brandVoice[0]} />;
+      case 'apparel':
+        return <Apparel colors={brandColors} logoUrl={logoUrl} brandName={brandVoice[0]} />;
+      case 'stationery':
+        return <Stationery colors={brandColors} logoUrl={logoUrl} brandName={brandVoice[0]} />;
       default:
         return null;
     }
@@ -327,6 +336,18 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({ identity, images, logoU
             {renderMockup('youtube')}
           </CardWrapper>
 
+          <CardWrapper title="Product Packaging" subtitle="Retail / Experience" onClick={() => setSelectedAsset({type: 'packaging', title: 'Product Packaging'})}>
+            {renderMockup('packaging')}
+          </CardWrapper>
+
+          <CardWrapper title="Apparel & Merch" subtitle="Fashion / Lifestyle" onClick={() => setSelectedAsset({type: 'apparel', title: 'Premium Apparel'})}>
+            {renderMockup('apparel')}
+          </CardWrapper>
+
+          <CardWrapper title="Corporate Suite" subtitle="Office / Branding" onClick={() => setSelectedAsset({type: 'stationery', title: 'Stationery Set'})}>
+            {renderMockup('stationery')}
+          </CardWrapper>
+
         </div>
       </section>
 
@@ -345,6 +366,9 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({ identity, images, logoU
             { id: 'businessCard', label: 'Carte de Visite', img: images.businessCard },
             { id: 'socialTemplate', label: 'Template Social', img: images.socialTemplate },
             { id: 'brandPattern', label: 'Motif de Marque', img: images.brandPattern },
+            { id: 'packaging', label: 'Packaging', img: images.packaging },
+            { id: 'apparel', label: 'Apparel', img: images.apparel },
+            { id: 'stationery', label: 'Stationery', img: images.stationery },
           ].map((item) => (
             <div key={item.id} className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-50 transition-all hover:shadow-2xl cursor-pointer active:scale-95" onClick={() => item.img && setSelectedAsset({type: 'image', url: item.img, title: item.label})}>
               <div className="aspect-[16/10] bg-slate-100 rounded-3xl overflow-hidden relative">

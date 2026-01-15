@@ -12,6 +12,11 @@ const Navbar: React.FC<NavbarProps> = ({ status, reset }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/'; // Force reload and redirect to home
+  };
+
   return (
     <nav className="fixed top-0 left-0 z-[60] w-full flex flex-col items-center bg-white/95 backdrop-blur-md border-b border-slate-100">
       <div className="w-full max-w-7xl py-2.5 md:py-3 flex flex-row justify-between items-center px-6 md:px-4">
@@ -55,14 +60,14 @@ const Navbar: React.FC<NavbarProps> = ({ status, reset }) => {
               <div className="hidden sm:flex flex-col">
                 <span className="text-[9px] font-bold text-slate-800 leading-tight">{user.displayName?.split(' ')[0]}</span>
                 <button 
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="text-[7px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors text-left active:scale-95"
                 >
                   Déconnexion
                 </button>
               </div>
               <button 
-                onClick={logout} 
+                onClick={handleLogout} 
                 className="sm:hidden p-1 text-slate-400 hover:text-red-500 active:scale-90"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

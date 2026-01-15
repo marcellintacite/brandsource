@@ -21,15 +21,25 @@ export const useBrandAnalysis = () => {
   };
 
   const handleImageSelected = async (base64: string, category: string, userId?: string, userName?: string) => {
-    setLogoImage(base64);
     setStatus('analyzing');
     setError(null);
     setGeneratedImages({});
     setProgress(5);
 
     try {
+      // Import compression utility
+      const { compressImage, getBase64Size, formatBytes } = await import('../utils/imageUtils');
+      
+      // Compress image to reduce size (max 1024px, 85% quality)
+      console.log(`Original image size: ${formatBytes(getBase64Size(base64))}`);
+      const compressedBase64 = await compressImage(base64, 1024, 1024, 0.85);
+      console.log(`Compressed image size: ${formatBytes(getBase64Size(compressedBase64))}`);
+      
+      // Use compressed image for everything
+      setLogoImage(compressedBase64);
+
       // 1. Analysis
-      const identity = await analyzeLogo(base64, category);
+      const identity = await analyzeLogo(compressedBase64, category);
       setBrandIdentity(identity);
       setProgress(20);
       
@@ -43,10 +53,10 @@ export const useBrandAnalysis = () => {
       const progressPerAsset = 80 / assets.length;
 
       // Upload logo to Storage early to get URL for prompts
-      let finalLogoUrl = base64;
+      let finalLogoUrl = compressedBase64;
       if (userId) {
         try {
-          finalLogoUrl = await uploadToStorage(`${STORAGE_PATHS.LOGOS}/${userId}_${Date.now()}.png`, base64);
+          finalLogoUrl = await uploadToStorage(`${STORAGE_PATHS.LOGOS}/${userId}_${Date.now()}.png`, compressedBase64);
           setLogoImage(finalLogoUrl);
         } catch (e) {
           console.warn("Logo storage upload failed", e);
@@ -69,7 +79,7 @@ export const useBrandAnalysis = () => {
           for (let i = 0; i < assets.length; i++) {
             const [key, prompt] = assets[i];
             try {
-              const base64Img = await generateImage(prompt, identity, { logoUrl: finalLogoUrl, userName });
+              const base64Img = await generateImage(prompt, identity, compressedBase64);
               const storagePath = `${STORAGE_PATHS.GENERATED_IMAGES}/${userId}/${docRef.id}/${key}.png`;
               const downloadUrl = await uploadToStorage(storagePath, base64Img);
               
@@ -94,9 +104,9 @@ export const useBrandAnalysis = () => {
 
         return docRef.id;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Désolé, une erreur technique a interrompu la création de votre studio de marque.");
+      setError(err.message || "Désolé, une erreur technique a interrompu la création de votre studio de marque.");
       setStatus('error');
       setProgress(0);
       throw err;
