@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --font-brand: "Space Grotesk", sans-serif;
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+}
+
+@utility brand-bg-primary {
+  background-color: var(--brand-primary);
+}
+
+@utility brand-text-primary {
+  color: var(--brand-primary);
+}
+
+@utility brand-border-primary {
+  border-color: var(--brand-primary);
+}
+
+:root {
+  /* Premium Orange Design System */
+  --brand-primary: #f97316;
+  --brand-secondary: #fbbf24;
+  --brand-surface: #ffffff;
+  --brand-bg: #fafafa;
+  
+  /* Native App Safe Areas & Overlays */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* No mobile gray box */
+  -webkit-touch-callout: none; /* No system context menu on long press */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-y: none; /* Static native feel */
+  background-color: var(--brand-bg);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #0f172a;
+  user-select: none; /* App feel: no text dragging */
+}
+
+/* Allow text selection only in inputs and specific areas */
+input, textarea, [contenteditable="true"], .allow-select {
+  user-select: text;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Native-style elastic easing */
+.ease-native {
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Custom Scrollbar for Desktop (cleaner/hidden) */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}

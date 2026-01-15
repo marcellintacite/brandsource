@@ -1,0 +1,7 @@
+{
+  "name": "BrandSource - Logo Analyzer",
+  "description": "An AI-powered brand identity generator that analyzes logos to create a complete 'Source of Truth' branding JSON, including color palettes, typography, and visual asset prompts.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
