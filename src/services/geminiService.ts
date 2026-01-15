@@ -33,12 +33,30 @@ const BRAND_SCHEMA = {
     visualAssets: {
       type: "object",
       properties: {
-        logoLight: { type: "string", description: "Prompt: Create a clean brand preview. Center the logo [LOGO_URL]. Use a white background. Add a thin accent border using the primary color [PRIMARY_COLOR]. Minimal, sharp, studio style." },
-        logoDark: { type: "string", description: "Prompt: Generate a brand preview with the logo [LOGO_URL] on a dark background in the primary color [PRIMARY_DARK]. Keep the logo bright and clear. Use a simple gradient in the brand colors." },
-        colorPalette: { type: "string", description: "Prompt: Create a color palette board for this brand. Show swatches for these colors [COLOR_1], [COLOR_2], [COLOR_3], [COLOR_4], [COLOR_5]. Use a clean grid layout with hex codes under each color. Include a small version of the logo [LOGO_URL]." },
-        businessCard: { type: "string", description: "Prompt: Generate a business card mockup for [USER_NAME] using the brand logo [LOGO_URL] and the palette [PRIMARY_COLOR], [SECONDARY_COLOR], [ACCENT_COLOR]. Show front and back. Use minimal layout with clear typography." },
-        socialTemplate: { type: "string", description: "Prompt: Create a square social media post template using the brand colors [COLOR_1], [COLOR_2], [COLOR_3]. Place the logo [LOGO_URL] in the top left. Use bold shapes, clean spacing, and a modern layout style." },
-        brandPattern: { type: "string", description: "Prompt: Generate a seamless brand pattern using geometric shapes inspired by the logo [LOGO_URL]. Use the full palette [PRIMARY_COLOR], [SECONDARY_COLOR], [ACCENT_COLOR]. Keep it modern, simple, and scalable." }
+        logoLight: { 
+          type: "string", 
+          description: "PROMPT: Professional brand presentation on pristine white background. COMPOSITION: Center the logo prominently, occupying 40% of frame. STYLING: Add subtle drop shadow (0px 20px 40px rgba(0,0,0,0.08)). BORDER: Thin 2px border in [PRIMARY_COLOR] around entire frame with 40px padding. LIGHTING: Soft top-down studio lighting. QUALITY: Ultra-sharp, minimal, editorial style. NO text, NO patterns, ONLY logo and border." 
+        },
+        logoDark: { 
+          type: "string", 
+          description: "PROMPT: Premium dark mode brand showcase. BACKGROUND: Rich gradient from [PRIMARY_COLOR] to deeper shade (darken by 20%). COMPOSITION: Logo centered, 35% of frame, ensure high contrast. EFFECTS: Subtle radial glow behind logo using [SECONDARY_COLOR] at 15% opacity. LIGHTING: Dramatic rim lighting from top-right. ATMOSPHERE: Luxury, sophisticated, night-mode aesthetic. NO text overlays." 
+        },
+        colorPalette: { 
+          type: "string", 
+          description: "PROMPT: Professional color system documentation board. LAYOUT: 5 vertical color swatches in clean grid, equal spacing (20px gaps). SWATCHES: Each 200x300px rectangle with exact colors [COLOR_1], [COLOR_2], [COLOR_3], [COLOR_4], [COLOR_5]. TYPOGRAPHY: Hex codes below each swatch in clean sans-serif (16px, medium weight). LOGO: Small 80px version in top-right corner. BACKGROUND: Light gray (#F8F9FA). STYLE: Flat design, design system documentation aesthetic, Figma/Sketch style." 
+        },
+        businessCard: { 
+          type: "string", 
+          description: "PROMPT: Elegant business card mockup, front and back views side-by-side. FRONT CARD: Logo [LOGO_URL] top-left (60px), name '[USER_NAME]' in bold (18px), title below (12px), contact info bottom-right. BACK CARD: Full bleed [PRIMARY_COLOR] background with subtle [SECONDARY_COLOR] geometric pattern (10% opacity). MATERIAL: Premium matte finish appearance. DIMENSIONS: Standard 3.5x2 inch cards. LIGHTING: Soft overhead with subtle shadow. COLORS: Strict adherence to [PRIMARY_COLOR], [SECONDARY_COLOR], [ACCENT_COLOR]. STYLE: Minimalist, professional, high-end corporate." 
+        },
+        socialTemplate: { 
+          type: "string", 
+          description: "PROMPT: Modern Instagram post template, 1080x1080px square. LAYOUT: Logo [LOGO_URL] in top-left (120px with 40px padding). BACKGROUND: Split diagonal design - 60% [PRIMARY_COLOR], 40% [SECONDARY_COLOR]. GEOMETRIC ELEMENTS: 3 abstract circles/shapes in [ACCENT_COLOR] at 20% opacity. TEXT AREA: Large white rectangle (600x400px) centered for copy. STYLE: Bold, contemporary, social media ready, high contrast. SPACING: Generous margins (60px). AESTHETIC: Canva/Adobe Express template style." 
+        },
+        brandPattern: { 
+          type: "string", 
+          description: "PROMPT: Seamless repeating brand pattern for backgrounds. ELEMENTS: Extract 2-3 geometric shapes from logo design (circles, lines, angles). COLORS: Rotate between [PRIMARY_COLOR] (50%), [SECONDARY_COLOR] (30%), [ACCENT_COLOR] (20%). LAYOUT: Diagonal grid pattern, 45-degree angle, elements spaced 150px apart. OPACITY: Vary between 15-40% for depth. SIZE: 1200x1200px tileable pattern. STYLE: Subtle, sophisticated, suitable for backgrounds/packaging. INSPIRATION: Luxury brand patterns, wallpaper design." 
+        }
       },
       required: ['logoLight', 'logoDark', 'colorPalette', 'businessCard', 'socialTemplate', 'brandPattern'],
     }
@@ -56,7 +74,33 @@ export const analyzeLogo = async (base64Image: string, category?: string): Promi
     }
   });
 
-  const prompt = `Analyze this logo${category ? ` for a business in the '${category}' category` : ''}. Generate branding JSON. Focus on specific high-fidelity brand assets. AI images should be clinical, professional, and studio-quality. NO TEXT in generated images except for requested logo markers.`;
+  const prompt = `
+TASK: Analyze this logo${category ? ` for a business in the '${category}' category` : ''} and generate a comprehensive brand identity system.
+
+REQUIREMENTS:
+1. Extract the EXACT primary and secondary colors from the logo (use precise hex codes)
+2. Generate complementary accent, background, and text colors that harmonize with the logo
+3. Suggest professional typography that matches the brand personality
+4. Create 3 sophisticated brand voice adjectives (e.g., "Bold", "Innovative", "Trustworthy")
+5. For each visual asset, write a DETAILED, STRUCTURED prompt following this format:
+   - Start with "PROMPT:"
+   - Include specific composition details (layout, positioning, sizing)
+   - Specify exact color usage with placeholders like [PRIMARY_COLOR]
+   - Define lighting and atmosphere
+   - Describe the desired aesthetic and quality level
+   - Include technical specifications (dimensions, style references)
+
+VISUAL ASSET GUIDELINES:
+- logoLight: Clean presentation on white background with border
+- logoDark: Luxury dark mode showcase with gradient
+- colorPalette: Professional design system documentation
+- businessCard: Front/back mockup with realistic materials
+- socialTemplate: Modern Instagram-ready template
+- brandPattern: Seamless repeating pattern for backgrounds
+
+OUTPUT: Return valid JSON matching the schema. Be specific and detailed in all visual asset prompts.
+`.trim();
+
 
   const result = await model.generateContent([
     { inlineData: { mimeType: "image/png", data: base64Image.split(',')[1] } },
@@ -96,7 +140,33 @@ export const generateImage = async (templatePrompt: string, brandIdentity: Brand
     .replace(/\[COLOR_4\]/g, colors[3])
     .replace(/\[COLOR_5\]/g, colors[4]);
 
-  const finalPrompt = `Professional studio product photography: ${fullPrompt}. Ultra-sharp, 8k, industrial design style. Featuring diverse professional individuals where appropriate. COLORS: Strictly follow ${brandIdentity.brandColors.primary} and ${brandIdentity.brandColors.secondary}.`;
+  const finalPrompt = `
+BRAND IDENTITY CONTEXT:
+- Primary Brand Color: ${brandIdentity.brandColors.primary} (MUST be dominant)
+- Secondary Brand Color: ${brandIdentity.brandColors.secondary} (MUST be visible)
+- Accent Color: ${brandIdentity.brandColors.accent}
+- Brand Voice: ${brandIdentity.brandVoice.join(', ')}
+
+VISUAL REQUIREMENTS:
+${fullPrompt}
+
+TECHNICAL SPECIFICATIONS:
+- Resolution: 8K ultra-sharp, professional studio photography
+- Style: Clean, modern, editorial design aesthetic
+- Lighting: Professional studio lighting with soft shadows
+- Color Accuracy: Exact hex color matching required
+- Composition: Rule of thirds, balanced, professional framing
+- Quality: Premium, publication-ready, high-end commercial
+
+STRICT RULES:
+1. Use ONLY the specified brand colors (${brandIdentity.brandColors.primary}, ${brandIdentity.brandColors.secondary}, ${brandIdentity.brandColors.accent})
+2. NO random colors, NO generic stock imagery colors
+3. NO text overlays unless explicitly requested in prompt
+4. Professional, polished, commercial-grade output
+5. Diverse representation where people are featured
+6. Clean, uncluttered compositions
+`.trim();
+  
   
   try {
     const response = await model.generateImages(finalPrompt);
